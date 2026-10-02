@@ -447,7 +447,6 @@
         const length = Math.hypot(x, y) || 1;
         return { x: x / length, y: y / length };
       }
-
       function distanceBetween(a, b) {
         return Math.hypot(a.x - b.x, a.y - b.y);
       }
@@ -897,8 +896,7 @@
         context.closePath();
         context.fill();
         context.fillStyle = "#d6bb78";
-        context.fillRect(-2, 3, 4, 9);
-        context.fillRect(-6, 5, 12, 3);
+        context.fillRect(-2, 3, 4, 9);        context.fillRect(-6, 5, 12, 3);
 
         if (isPlayer) {
           const angle = Math.atan2(facingY, facingX);
@@ -998,3 +996,247 @@
           drawShieldIcon(merchant.x, merchant.y - 30, 16, true);
           context.textAlign = "center";
           context.fillStyle = "#eee6d2";
+          context.font = "bold 10px ui-monospace, monospace";
+          context.fillText("SMITH", merchant.x, merchant.y - 40);
+          context.fillStyle = "#d6c58f";
+          context.fillText("E TO TRADE", merchant.x, merchant.y + 34);
+        });
+        context.textAlign = "left";
+      }
+
+      function drawCoinDrops() {
+        coinDrops.forEach((drop) => {
+          const bob = Math.sin(elapsed * 5 + drop.bob) * 3;
+          context.fillStyle = "#d9b85d";
+          context.beginPath();
+          context.arc(drop.x, drop.y + bob, 10, 0, Math.PI * 2);
+          context.fill();
+          context.strokeStyle = "#fff0a8";
+          context.lineWidth = 2;
+          context.stroke();
+          context.fillStyle = "#72501c";
+          context.font = "bold 9px ui-monospace, monospace";
+          context.textAlign = "center";
+          context.fillText(String(drop.value), drop.x, drop.y + bob + 3);
+        });
+        context.textAlign = "left";
+      }
+
+      function drawShieldIcon(x, y, size, active) {
+        context.save();
+        context.translate(x, y);
+        context.beginPath();
+        context.moveTo(0, -size / 2);
+        context.lineTo(size * 0.42, -size * 0.32);
+        context.lineTo(size * 0.34, size * 0.12);
+        context.lineTo(0, size / 2);
+        context.lineTo(-size * 0.34, size * 0.12);
+        context.lineTo(-size * 0.42, -size * 0.32);
+        context.closePath();
+        context.fillStyle = active ? "#65c7a3" : "#d5b96f";
+        context.strokeStyle = "#f0e4b8";
+        context.lineWidth = 2;
+        context.fill();
+        context.stroke();
+        context.restore();
+      }
+
+      function drawCrate() {
+        if (crate.broken) {
+          context.fillStyle = "#775335";
+          context.fillRect(crate.x + 5, crate.y + crate.height - 7, 18, 6);
+          context.fillRect(crate.x + crate.width - 24, crate.y + crate.height - 10, 19, 6);
+          if (shieldAvailable) {
+            context.fillStyle = "#d5b96f30";
+            context.beginPath();
+            context.arc(shieldPickup.x, shieldPickup.y, 24 + Math.sin(elapsed * 5) * 3, 0, Math.PI * 2);
+            context.fill();
+            drawShieldIcon(shieldPickup.x, shieldPickup.y, 28, false);
+            context.fillStyle = "#f2e7c7";
+            context.font = "11px ui-monospace, monospace";
+            context.textAlign = "center";
+            context.fillText("SHIELD", shieldPickup.x, shieldPickup.y - 25);
+            context.textAlign = "left";
+          }
+          return;
+        }
+
+        context.fillStyle = "#10181266";
+        context.beginPath();
+        context.ellipse(shieldPickup.x + 3, crate.y + crate.height + 6, 34, 8, 0, 0, Math.PI * 2);
+        context.fill();
+        context.fillStyle = crate.flash > 0 ? "#d9a66b" : "#795335";
+        context.fillRect(crate.x, crate.y, crate.width, crate.height);
+        context.strokeStyle = "#c8a667";
+        context.lineWidth = 3;
+        context.strokeRect(crate.x + 1.5, crate.y + 1.5, crate.width - 3, crate.height - 3);
+        context.fillStyle = "#b7a16f";
+        context.fillRect(crate.x + 8, crate.y + 7, 5, crate.height - 14);
+        context.fillRect(crate.x + crate.width - 13, crate.y + 7, 5, crate.height - 14);
+        context.fillRect(crate.x + 8, crate.y + crate.height / 2 - 2, crate.width - 16, 4);
+        context.fillStyle = "#d8b47a";
+        const pipSize = 7;
+        for (let pip = 0; pip < 3; pip++) {
+          context.fillStyle = pip < crate.hp ? "#f0d58b" : "#533c2b";
+          context.fillRect(shieldPickup.x - 12 + pip * 10, crate.y - 12, pipSize, 5);
+        }
+      }
+
+      function drawSiege() {
+        if (siege.mode === "idle" || npcCount === 1) return;
+        const warning = siege.mode === "warning";
+        const halfWidth = warning ? 48 : 56;
+        context.save();
+        context.fillStyle = warning ? "#d5b96f30" : "#bb59476b";
+        context.strokeStyle = warning ? "#f0d58b" : "#e98564";
+        context.lineWidth = warning ? 2 : 4;
+        context.setLineDash(warning ? [9, 7] : []);
+        if (siege.axis === "x") {
+          context.fillRect(siege.center - halfWidth, bounds.top, halfWidth * 2, bounds.bottom - bounds.top);
+          context.strokeRect(siege.center - halfWidth, bounds.top, halfWidth * 2, bounds.bottom - bounds.top);
+          context.textAlign = "center";
+          context.font = "bold 12px ui-monospace, monospace";
+          context.fillText(warning ? "STONE VOLLEY" : "IMPACT", siege.center, bounds.top + 36);
+        } else {
+          context.fillRect(bounds.left, siege.center - halfWidth, bounds.right - bounds.left, halfWidth * 2);
+          context.strokeRect(bounds.left, siege.center - halfWidth, bounds.right - bounds.left, halfWidth * 2);
+          context.textAlign = "center";
+          context.font = "bold 12px ui-monospace, monospace";
+          context.fillText(warning ? "STONE VOLLEY" : "IMPACT", width / 2, siege.center - halfWidth + 18);
+        }
+        context.restore();
+      }
+
+      function draw() {
+        context.clearRect(0, 0, width, height);
+        context.fillStyle = "#303b38";
+        context.fillRect(0, 0, width, height);
+        context.save();
+        context.translate(-camera.x, -camera.y);
+        context.fillStyle = "#303b38";
+        context.fillRect(bounds.left - 40, bounds.top - 40, bounds.right - bounds.left + 80, bounds.bottom - bounds.top + 80);
+
+        context.save();
+        context.beginPath();
+        context.rect(bounds.left, bounds.top, bounds.right - bounds.left, bounds.bottom - bounds.top);
+        context.clip();
+        context.fillStyle = "#53615b";
+        context.fillRect(bounds.left, bounds.top, bounds.right - bounds.left, bounds.bottom - bounds.top);
+        const tileWidth = 64;
+        const tileHeight = 44;
+        let row = 0;
+        for (let y = bounds.top; y < bounds.bottom; y += tileHeight) {
+          const shift = row % 2 ? tileWidth / 2 : 0;
+          let column = 0;
+          for (let x = bounds.left - shift; x < bounds.right; x += tileWidth) {
+            const shade = (row + column) % 3;
+            context.fillStyle = shade === 0 ? "#68726b" : shade === 1 ? "#73766c" : "#5e6b65";
+            context.fillRect(x + 1, y + 1, tileWidth - 2, tileHeight - 2);
+            context.strokeStyle = "#46514d";
+            context.lineWidth = 2;
+            context.strokeRect(x + 1, y + 1, tileWidth - 2, tileHeight - 2);
+            context.fillStyle = "#ffffff0a";
+            context.fillRect(x + 4, y + 4, tileWidth - 8, 2);
+            column++;
+          }
+          row++;
+        }
+        context.strokeStyle = "#b4a270";
+        context.lineWidth = 2;
+        context.strokeRect(bounds.left + 18, bounds.top + 18, bounds.right - bounds.left - 36, bounds.bottom - bounds.top - 36);
+        context.restore();
+
+        context.fillStyle = "#343f3b";
+        context.fillRect(bounds.left - 40, bounds.top - 40, bounds.right - bounds.left + 80, 40);
+        context.fillRect(bounds.left - 40, bounds.bottom, bounds.right - bounds.left + 80, 40);
+        context.fillRect(bounds.left - 40, bounds.top, 40, bounds.bottom - bounds.top);
+        context.fillRect(bounds.right, bounds.top, 40, bounds.bottom - bounds.top);
+        context.fillStyle = "#46514d";
+        for (let x = bounds.left - 32; x < bounds.right; x += 48) {
+          context.fillRect(x, 0, 30, 16);
+          context.fillRect(x, bounds.bottom + 24, 30, 16);
+        }
+        for (let y = bounds.top + 8; y < bounds.bottom - 24; y += 48) {
+          context.fillRect(0, y, 16, 30);
+          context.fillRect(bounds.right + 24, y, 16, 30);
+        }
+        context.strokeStyle = "#94845c";
+        context.lineWidth = 2;
+        context.strokeRect(bounds.left, bounds.top, bounds.right - bounds.left, bounds.bottom - bounds.top);
+
+        drawPennants();
+        drawObstacles();
+        drawCrate();
+        drawCoinDrops();
+        drawMerchants();
+        drawSiege();
+        const activeRivals = rivals.filter((rival) => rival.hp > 0);
+        const totalRivalHealth = activeRivals.reduce((total, rival) => total + rival.hp, 0);
+        const totalRivalMaxHealth = rivals.reduce((total, rival) => total + rival.maxHp, 0);
+
+        activeRivals.forEach((rival) => {
+          context.fillStyle = "#1b2420";
+          context.font = "bold 10px ui-monospace, monospace";
+          context.textAlign = "center";
+          context.fillText(rival.role.toUpperCase(), rival.x, rival.y - rival.size / 2 - 8);
+          if (rival.windup > 0) {
+            context.strokeStyle = rival.role === "Brute" ? "#d96854" : "#f0c96b";
+            context.lineWidth = rival.role === "Brute" ? 4 : 3;
+            context.beginPath();
+            context.arc(rival.x, rival.y, rival.attackRange * 0.42 + Math.sin(elapsed * 30) * 3, 0, Math.PI * 2);
+            context.stroke();
+            context.fillStyle = "#f5d889";
+            context.font = "bold 12px ui-monospace, monospace";
+            context.fillText("!", rival.x, rival.y - rival.size / 2 - 20);
+          }
+          context.textAlign = "left";
+        });
+
+        drawBlock(player, "#d94d49", "#f47d69", player.faceX, player.faceY, true);
+        activeRivals.forEach((rival) => drawBlock(rival, rival.color, rival.highlight, -1, 0, false));
+        if (isBlocking()) {
+          drawShieldIcon(player.x + player.faceX * 27, player.y + player.faceY * 27, 25, true);
+        }
+        context.restore();
+
+        drawHealth(58, 75, player.hp, player.maxHp, "#e45e56", "YOU");
+        drawHealth(width - 186, 75, totalRivalHealth, totalRivalMaxHealth, "#dfb75c", `NPCS ${activeRivals.length}/${rivals.length}`);
+        context.textAlign = "center";
+        context.fillStyle = hasShield ? "#78c8a5" : "#d8e1d4";
+        context.font = "11px ui-monospace, monospace";
+        context.fillText(hasShield ? "SHIELD READY | F TO BLOCK" : shieldAvailable ? "SHIELD DROPPED" : "SHIELD IN CRATE", width / 2, 75);
+        context.fillStyle = "#eee6d2";
+        context.font = "bold 13px ui-monospace, monospace";
+        context.fillText(`LEVEL ${stageIndex + 1}  WAVE ${wave}  ${formatTime(timeRemaining)}`, width / 2, 104);
+        context.fillStyle = "#d9b85d";
+        context.fillText(`${coins} COINS  |  ${weapon.name.toUpperCase()}`, width / 2, 125);
+        context.textAlign = "left";
+
+        if (ended) {
+          context.fillStyle = "#111914bb";
+          context.fillRect(0, 0, width, height);
+          context.textAlign = "center";
+          context.fillStyle = result === "You win!" ? "#f2d17b" : "#f07d71";
+          context.font = "bold 42px Georgia, serif";
+          context.fillText(result, width / 2, height / 2 - 8);
+          context.fillStyle = "#e3e9df";
+          context.font = "14px ui-monospace, monospace";
+          context.fillText("Press R to retry this level", width / 2, height / 2 + 25);
+          context.textAlign = "left";
+        }
+      }
+
+      function frame(time) {
+        const dt = Math.min((time - lastTime) / 1000 || 0, 0.04);
+        lastTime = time;
+        update(dt);
+        draw();
+        requestAnimationFrame(frame);
+      }
+
+      status.textContent = "Choose Play to begin.";
+      requestAnimationFrame(frame);
+    })();
+  </script>
+</body>
+</html>
